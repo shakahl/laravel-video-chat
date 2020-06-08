@@ -1,9 +1,13 @@
 <?php
 
-namespace PhpJunior\LaravelVideoChat\Facades;
+namespace Sobolevna\LaravelVideoChat\Facades;
 
 use Illuminate\Support\Facades\Facade;
+use Sobolevna\LaravelVideoChat\Facades\Services\Chat as ChatService;
 
+/**
+ * @see ChatService
+ */
 class Chat extends Facade
 {
     /**

@@ -2,42 +2,29 @@
 
 namespace Sobolevna\LaravelVideoChat\Events;
 
-use Carbon\Carbon;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class NewGroupConversationMessage implements ShouldBroadcastNow
+class VideoChatFinish implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    /**
-     * @var
-     */
-    public $text;
-    /**
-     * @var
-     */
+    public $data;
     public $channel;
-    /**
-     * @var array
-     */
-    private $files;
 
     /**
      * Create a new event instance.
      *
-     * @param $text
+     * @param $data
      * @param $channel
-     * @param array $files
      */
-    public function __construct($text, $channel, $files = [])
+    public function __construct($data, $channel)
     {
-        $this->text = $text;
+        $this->data = $data;
         $this->channel = $channel;
-        $this->files = $files;
     }
 
     /**
@@ -52,11 +39,6 @@ class NewGroupConversationMessage implements ShouldBroadcastNow
 
     public function broadcastWith()
     {
-        return [
-            'text'       => $this->text,
-            'sender'     => check()->user(),
-            'files'      => $this->files,
-            'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
-        ];
+        return $this->data;
     }
 }

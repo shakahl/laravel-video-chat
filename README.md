@@ -1,291 +1,378 @@
 # Laravel Video Chat
-Laravel Video Chat using Socket.IO and WebRTC
+Laravel Video Chat using Openvidu 
 
-[![Build Status](https://travis-ci.org/PHPJunior/laravel-video-chat.svg?branch=master)](https://travis-ci.org/PHPJunior/laravel-video-chat)
-[![StyleCI](https://styleci.io/repos/107812103/shield?branch=master)](https://styleci.io/repos/107812103)
-[![Latest Stable Version](https://poser.pugx.org/php-junior/laravel-video-chat/v/stable)](https://packagist.org/packages/php-junior/laravel-video-chat)
-[![Total Downloads](https://poser.pugx.org/php-junior/laravel-video-chat/downloads)](https://packagist.org/packages/php-junior/laravel-video-chat)
+# АПИ v1
 
-## Installation
-```php
-composer require php-junior/laravel-video-chat
+## Авторизация
+
+###Зарегистрировать пользователя
+
+POST https:://app.radius-etl.ru/api/auth/register 
+
+Образец запроса: 
+```
+{
+	"first_name": "Иван",
+	"last_name": "Иванов",
+	"email": "user@example.com",
+	"password": "user",
+	"password_confirmation": "user",
+}
+```
+Образец ответа: 
+```
+{
+	"success": true,
+	"message": "Вы успешно зарегистрировались"
+}
 ```
 
-Laravel 5.5 uses Package Auto-Discovery, so doesn't require you to manually add the ServiceProvider.
+### Аутентификация пользователя 
 
-If you don't use auto-discovery, add the ServiceProvider to the providers array in config/app.php
+POST https:://app.radius-etl.ru/api/auth/login 
 
-```php
-PhpJunior\LaravelVideoChat\LaravelVideoChatServiceProvider::class,
+Образец запроса: 
+```
+{
+	"email": "user@example.com",
+	"password": "user",
+}
+```
+Образец ответа: 
+```
+{
+	"success": true,
+	"message": "Вы успешно вошли в систему",
+	"token": "ab1.cd2.ef3",
+	"two_factor_code": false,
+	"reload": false,
+	"user": {
+		"id": 2,
+		"email": "user@example.com",
+		"password": "user",
+		"profile": {
+			"first_name": "Иван",
+			"last_name": "Иванов",
+		},
+		"roles":[
+			{
+				"id": 2,
+				"name": "Пользователь",
+				"slug": "user",
+				"permissions": [
+					{
+						"name": "enable-login",
+						"status": true
+					}
+				]
+			}
+		],
+		"permissions": []
+	}
+}
 ```
 
-```php 
-php artisan vendor:publish --provider="PhpJunior\LaravelVideoChat\LaravelVideoChatServiceProvider"
+## Беседы 
+
+Требуется авторизация через Bearer token. Его можно получить через запрос аутентификации пользователя. 
+
+### Просмотреть список 
+
+GET https:://app.radius-etl.ru/api/chat/conversations 
+
+Образец ответа: 
+```
+{
+	"success": true,
+	"conversations": [
+		{
+			"id": 1,
+			"name": "ConversationName",
+			"users": [
+				{
+					"id": 2,
+					"email": "user@example.com",
+					"password": "user",
+					"profile": {
+						"first_name": "Иван",
+						"last_name": "Иванов",
+					},
+					"roles":[
+						{
+							"id": 2,
+							"name": "Пользователь",
+							"slug": "user",
+							"permissions": [
+								{
+									"name": "enable-login",
+									"status": true
+								}
+							]
+						}
+					],
+					"permissions": []
+				}
+			],
+			"messages": [],
+			"files": []
+		}
+	]
+}
 ```
 
-And 
-```php 
-php artisan migrate
-php artisan storage:link
+### Создать беседу 
 
-change APP_URL in .env
+POST https:://app.radius-etl.ru/api/chat/conversations 
+
+Образец запроса: 
+```
+{
+	"name": "Conversation2"	
+}
 ```
 
-This is the contents of the published config file:
+Образец ответа: 
+```
+{
+	"success": true,
+	"conversationId": 2	
+}
+```
 
-```php
-return [
-    'relation'  => [
-        'conversations' =>  PhpJunior\LaravelVideoChat\Models\Conversation\Conversation::class,
-        'group_conversations' => PhpJunior\LaravelVideoChat\Models\Group\Conversation\GroupConversation::class
-    ],
-    'user' => [
-        'model' =>  App\User::class,
-        'table' =>  'users' // Existing user table name
-    ],
-    'table' => [
-        'conversations_table'   =>  'conversations',
-        'messages_table'        =>  'messages',
-        'group_conversations_table' =>  'group_conversations',
-        'group_users_table'     =>  'group_users',
-        'files_table'           =>  'files'
-    ],
-    'channel'   =>  [
-        'new_conversation_created'  =>  'new-conversation-created',
-        'chat_room'                 =>  'chat-room',
-        'group_chat_room'           =>  'group-chat-room'
-    ],
-    'upload' => [
-        'storage' => 'public'
+### Удалить беседу (если там есть только вы) 
+
+DELETE https:://app.radius-etl.ru/api/chat/conversations/{conversation}
+
+Образец ответа: 
+```
+{
+	"success": true,
+	"conversation": 2	
+}
+```
+
+## Участники 
+
+### Просмотреть список
+
+GET https:://app.radius-etl.ru/api/chat/conversations/{conversation}/participants 
+
+Образец ответа: 
+```
+{
+	"success": true,
+	"participants": [
+		{
+			"id": 2,
+			"email": "user@example.com",
+			"password": "user",
+			"profile": {
+				"first_name": "Иван",
+				"last_name": "Иванов",
+			},
+			"roles":[
+				{
+					"id": 2,
+					"name": "Пользователь",
+					"slug": "user",
+					"permissions": [
+						{
+							"name": "enable-login",
+							"status": true
+						}
+					]
+				}
+			],
+			"permissions": []
+		}
+	]
+}
+```
+
+### Добавить  
+
+POST https:://app.radius-etl.ru/api/chat/conversations/{conversation}/participants 
+
+Образец запроса: 
+```
+{
+	"users": [
+		3
+	]
+}
+```
+
+Образец ответа: 
+```
+{
+	"success": true
+}
+```
+
+### Удалить  
+
+DELETE https:://app.radius-etl.ru/api/chat/conversations/{conversation}/participants/{participant} 
+
+Образец ответа: 
+```
+{
+	"success": true
+}
+```
+
+## Файлы 
+
+### Список  
+
+GET https:://app.radius-etl.ru/api/chat/conversations/{conversation}/files 
+
+Образец ответа: 
+```
+{
+	"success": true,
+	"files": [
+		{
+			"id": 1,
+			"conversation_id": 2,
+			"message_id": 1,
+			"user_id": 2,
+			"name": "20200422161508-php.log",
+			"file_details": {
+				"fullPath":"/20200422161508-php.log"
+				"mimeType":"text/plain"
+				"name":"20200422161508-php.log"
+				"size":134381
+				"webPath":"https://www.radius-micro.me/storage/20200422161508-php.log"
+			}
+		}
+	]
+}
+```
+
+### Добавить  
+
+POST https:://app.radius-etl.ru/api/chat/conversations/{conversation}/files 
+
+Образец запроса: 
+```
+{
+	"files": [
+		<binary>
+	]
+}
+```
+
+Образец ответа: 
+```
+{
+	"success" : true,
+    "message" : "Файлы отправлены",
+    "files" : [
+    	{
+			"id": 2,
+			"conversation_id": 2,
+			"message_id": 0,
+			"user_id": 2,
+			"name": "20200422161508-java.log",
+			"file_details": {
+				"fullPath":"/20200422161508-java.log"
+				"mimeType":"text/plain"
+				"name":"20200422161508-java.log"
+				"size":134381
+				"webPath":"https://www.radius-micro.me/storage/20200422161508-java.log"
+			}
+		}
     ]
-];
+}
 ```
 
-Uncomment `App\Providers\BroadcastServiceProvider` in the providers array of your `config/app.php` configuration file
+### Удалить  
 
-Install the JavaScript dependencies:
-```javascript
-    npm install
-    npm install --save laravel-echo js-cookie vue-timeago socket.io socket.io-client webrtc-adapter vue-chat-scroll
+DELETE https:://app.radius-etl.ru/api/chat/conversations/{conversation}/files/{file} 
+
+Образец ответа: 
+```
+{
+	"success" : true,
+    "message" : "Файл удалён"
+}
 ```
 
-If you are running the Socket.IO server on the same domain as your web application, you may access the client library like 
+## Сообщения 
 
-```javascript
-<script src="//{{ Request::getHost() }}:6001/socket.io/socket.io.js"></script>
+### Список  
+
+GET https:://app.radius-etl.ru/api/chat/conversations/{conversation}/messages 
+
+Образец ответа: 
+```
+{
+	"success": true,
+	"messages": [
+		{
+			"id": 1,
+			"conversation_id": 2,
+			"user_id": 2,
+			"text": "text",
+			"files": [],
+			"sender": {
+				{
+					"id": 2,
+					"email": "user@example.com",
+					"password": "user",
+					"profile": {
+						"first_name": "Иван",
+						"last_name": "Иванов",
+					},
+					"roles":[
+						{
+							"id": 2,
+							"name": "Пользователь",
+							"slug": "user",
+							"permissions": [
+								{
+									"name": "enable-login",
+									"status": true
+								}
+							]
+						}
+					],
+					"permissions": []
+				}
+			}
+		}
+	]
+}
 ```
 
- in your application's `head` HTML element
- 
+### Добавить  
 
-Next, you will need to instantiate Echo with the `socket.io` connector and a `host`.
+POST https:://app.radius-etl.ru/api/chat/conversations/{conversation}/messages 
 
-```vuejs
- require('webrtc-adapter');
- window.Cookies = require('js-cookie');
- 
- import Echo from "laravel-echo"
- 
- window.io = require('socket.io-client');
- 
- window.Echo = new Echo({
-     broadcaster: 'socket.io',
-     host: window.location.hostname + ':6001'
- });
+Образец запроса: 
+```
+{
+	"text": "text",
+	"files": [1]
+}
 ```
 
-Finally, you will need to run a compatible Socket.IO server. Use
-[tlaverdure/laravel-echo-server](https://github.com/tlaverdure/laravel-echo-server) GitHub repository.
-
-
-In `resources/assets/js/app.js` file:
-
-```vuejs
- import VueChatScroll from 'vue-chat-scroll';
- import VueTimeago from 'vue-timeago';
- 
- Vue.use(VueChatScroll);
- Vue.component('chat-room' , require('./components/laravel-video-chat/ChatRoom.vue'));
- Vue.component('group-chat-room', require('./components/laravel-video-chat/GroupChatRoom.vue'));
- Vue.component('video-section' , require('./components/laravel-video-chat/VideoSection.vue'));
- Vue.component('file-preview' , require('./components/laravel-video-chat/FilePreview.vue'));
- 
- Vue.use(VueTimeago, {
-     name: 'timeago', // component name, `timeago` by default
-     locale: 'en-US',
-     locales: {
-         'en-US': require('vue-timeago/locales/en-US.json')
-     }
- })
+Образец ответа: 
+```
+{
+	"success" : true,
+    "message" : "Сообщение отправлено"
+}
 ```
 
-Run `npm run dev` to recompile your assets.
+### Удалить  
 
-## Features
+DELETE https:://app.radius-etl.ru/api/chat/conversations/{conversation}/messages/{message} 
 
-- One To One Chat ( With Video Call )
-- Accept Message Request
-- Group Chat
-- File Sharing
-
-## Usage
-
-#### Get All Conversation and Group Conversation
-
-```php
-$groups = Chat::getAllGroupConversations();
-$conversations = Chat::getAllConversations()
+Образец ответа: 
 ```
-
-```blade
-<ul class="list-group">
-    @foreach($conversations as $conversation)
-        <li class="list-group-item">
-        @if($conversation->message->conversation->is_accepted)
-            <a href="#">
-                <h2>{{$conversation->user->name}}</h2>
-                @if(!is_null($conversation->message))
-                    <span>{{ substr($conversation->message->text, 0, 20)}}</span>
-                @endif
-            </a>
-         @else
-            <a href="#">
-                <h2>{{$conversation->user->name}}</h2>
-                @if($conversation->message->conversation->second_user_id == auth()->user()->id)
-                    <a href="accept_request_route" class="btn btn-xs btn-success">
-                        Accept Message Request
-                    </a>
-                @endif
-            </a>
-         @endif
-        </li>
-    @endforeach
-
-    @foreach($groups as $group)
-        <li class="list-group-item">
-            <a href="#">
-                <h2>{{$group->name}}</h2>
-                <span>{{ $group->users_count }} Member</span>
-            </a>
-        </li>
-    @endforeach
-</ul>
+{
+	"success" : true,
+    "message" : "Сообщение удалено"
+}
 ```
-
-#### Start Conversation 
-```php
-Chat::startConversationWith($otherUserId);
-```
-
-#### Accept Conversation 
-```php
-Chat::acceptMessageRequest($conversationId);
-```
-
-#### Get Conversation Messages
-
-```php
-$conversation = Chat::getConversationMessageById($conversationId);
-```
-
-```blade
-<chat-room :conversation="{{ $conversation }}" :current-user="{{ auth()->user() }}"></chat-room>
-```
-
-#### Send Message
-
-You can change message send route in component
-
-```php
-Chat::sendConversationMessage($conversationId, $message);
-```
-
-#### Start Video Call ( Not Avaliable On Group Chat )
-
-You can change video call route . I defined video call route `trigger/{id}` method `POST`
-Use `$request->all()` for video call.
-
-```php
-Chat::startVideoCall($conversationId , $request->all());
-```
-
-#### Start Group Conversation 
-```php
-Chat::createGroupConversation( $groupName , [ $otherUserId , $otherUserId2 ]);
-```
-
-#### Get Group Conversation Messages
-
-```php
-$conversation = Chat::getGroupConversationMessageById($groupConversationId);
-```
-
-```blade
-<group-chat-room :conversation="{{ $conversation }}" :current-user="{{ auth()->user() }}"></group-chat-room>
-```
-
-#### Send Group Chat Message
-
-You can change message send route in component
-
-```php
-Chat::sendGroupConversationMessage($groupConversationId, $message);
-```
-
-#### Add Members to Group
-
-```php
-Chat::addMembersToExistingGroupConversation($groupConversationId, [ $otherUserId , $otherUserId2 ])
-```
-
-#### Remove Members from Group
-
-```php
-Chat::removeMembersFromGroupConversation($groupConversationId, [ $otherUserId , $otherUserId2 ])
-```
-
-#### Leave From Group
-
-```php
-Chat::leaveFromGroupConversation($groupConversationId);
-```
-
-## File Sharing
-
-Run this command `php artisan storage:link`
-
-#### Send Files in Conversation
-
-```php
-Chat::sendFilesInConversation($conversationId , $request->file('files'));
-```
-
-#### Send Files in Group Conversation
-
-```php
-Chat::sendFilesInGroupConversation($groupConversationId , $request->file('files'));
-```
-
-## ToDo
-
-- Add Members to Group
-- Remove Member From Group
-
-## Next Version
-
-- Group Video Call
-
-## Credits
-
-- All Contributors
-
-## License
-
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
-
-[Demo Project](https://github.com/PHPJunior/laravel-video-chat-demo)
-
-## Support on Beerpay
-Hey dude! Help me out for a couple of :beers:!
-
-[![Beerpay](https://beerpay.io/PHPJunior/laravel-video-chat/badge.svg?style=beer-square)](https://beerpay.io/PHPJunior/laravel-video-chat)  [![Beerpay](https://beerpay.io/PHPJunior/laravel-video-chat/make-wish.svg?style=flat-square)](https://beerpay.io/PHPJunior/laravel-video-chat?focus=wish)

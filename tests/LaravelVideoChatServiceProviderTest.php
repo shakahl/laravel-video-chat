@@ -6,17 +6,34 @@
  * Time: 1:20 AM.
  */
 
-namespace PhpJunior\LaravelVideoChat\Tests;
+namespace Sobolevna\LaravelVideoChat\Tests;
 
-use GrahamCampbell\TestBenchCore\ServiceProviderTrait;
-use PhpJunior\LaravelVideoChat\Services\Chat;
+use Sobolevna\LaravelVideoChat\Services\Chat;
+use Illuminate\Support\Facades\Route;
 
 class LaravelVideoChatServiceProviderTest extends TestCase
 {
-    use ServiceProviderTrait;
 
-    public function testChatIsInjectable()
+    public function testFacades()
     {
-        $this->assertIsInjectable(Chat::class);
+        $this->assertTrue(class_exists(\Chat::class));
+    }
+
+    public function testConfig() {
+        $this->assertNotEmpty(\config('laravel-video-chat'));
+    }
+
+    public function testMigrations() {
+        foreach (\config('laravel-video-chat.table') as $table) {
+            $this->assertTrue(\Schema::hasTable($table));
+        }
+        
+    }
+
+    public function testRoutes() {
+        $this->assertTrue(Route::has('api.chat.conversations.index'));
+        $this->assertTrue(Route::has('api.chat.conversations.participants.index'));
+        $this->assertTrue(Route::has('api.chat.conversations.messages.index'));
+        $this->assertTrue(Route::has('api.chat.conversations.files.index'));
     }
 }

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateMessagesTable extends Migration
+class CreateProfileTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,10 @@ class CreateMessagesTable extends Migration
      */
     public function up()
     {
-        Schema::create(config('laravel-video-chat.table.messages_table'), function (Blueprint $table) {
+        Schema::create('profile', function (Blueprint $table) {
             $table->increments('id');
-
-            $table->integer('conversation_id');
-
             $table->integer('user_id');
-            $table->longText('text');
+            $table->string('name');
 
             $table->timestamps();
         });
@@ -32,6 +29,6 @@ class CreateMessagesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists(config('laravel-video-chat.table.messages_table'));
+        Schema::dropIfExists('profile');
     }
 }
